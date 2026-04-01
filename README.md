@@ -31,6 +31,14 @@
 - 🔒 **Secure & Private** - Each user has their own account with isolated permissions
 - ⚡ **Fast Response** - Commands execute immediately after approval
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="docs/images/notification.jpg" alt="Push Notification" width="200">
+  <img src="docs/images/approve.jpg" alt="Approval Page" width="200">
+  <img src="docs/images/approved.jpg" alt="Approved" width="200">
+</p>
+
 ## 🏗️ Architecture
 
 ```mermaid
