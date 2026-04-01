@@ -143,6 +143,7 @@ Edit `~/.claude/settings.json`:
 
 | Document | Description |
 |----------|-------------|
+| [Architecture](ARCHITECTURE.md) | System architecture and data flow |
 | [Server Setup Guide](docs/server-setup.md) | Detailed server configuration |
 | [User Guide](docs/user-guide.md) | Share with team members |
 
