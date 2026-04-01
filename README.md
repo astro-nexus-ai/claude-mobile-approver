@@ -22,6 +22,14 @@
 
 ---
 
+## 📸 Demo
+
+<p align="center">
+  <img src="docs/images/demo.gif" alt="Demo" width="300">
+</p>
+
+---
+
 ## ✨ Features
 
 - 🔔 **Real-time Push** - Get instant notifications when Claude Code needs permission
