@@ -30,3 +30,6 @@ Thumbs.db
 
 # Client config with real credentials
 client/config/settings.json
+
+# Private documentation (credentials, secrets)
+docs-private/
