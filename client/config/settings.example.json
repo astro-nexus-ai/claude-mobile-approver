@@ -1,0 +1,7 @@
+{
+    "ntfy_server": "http://YOUR_SERVER_IP:2586",
+    "approval_server": "http://YOUR_SERVER_IP:2587",
+    "ntfy_user": "claude",
+    "ntfy_pass": "YOUR_PASSWORD",
+    "ntfy_topic": "claude-approve"
+}
