@@ -338,30 +338,26 @@ APPROVAL_PAGE = '''<!DOCTYPE html>
         }
 
         function submit(action) {
-            document.getElementById('buttons').innerHTML =
-                '<div style="padding:20px;text-align:center;color:#888">Processing...</div>';
             var url = '/api/' + sessionId + '/' + action;
             if (selectedSuggestion !== null) {
                 url += '?suggestion=' + selectedSuggestion;
             }
-            fetch(url, {method: 'POST'})
-                .then(r => r.json())
-                .then(d => {
-                    document.getElementById('pending').classList.add('hidden');
-                    document.getElementById('result').classList.remove('hidden');
-                    var icon = document.getElementById('resultIcon');
-                    var text = document.getElementById('resultText');
-                    if (action === 'approve') {
-                        icon.textContent = '✅';
-                        text.textContent = 'Approved';
-                        text.classList.add('result-approved');
-                    } else {
-                        icon.textContent = '❌';
-                        text.textContent = 'Denied';
-                        text.classList.add('result-denied');
-                    }
-                    setTimeout(function() { window.close(); }, 1500);
-                });
+            // Send approval request
+            fetch(url, {method: 'POST'});
+            // Show done state (iOS doesn't allow auto redirect to apps)
+            document.getElementById('pending').classList.add('hidden');
+            document.getElementById('result').classList.remove('hidden');
+            var icon = document.getElementById('resultIcon');
+            var text = document.getElementById('resultText');
+            if (action === 'approve') {
+                icon.textContent = '✅';
+                text.innerHTML = 'Approved!<br><small style="font-size:14px;color:#888">Swipe back to ntfy</small>';
+                text.classList.add('result-approved');
+            } else {
+                icon.textContent = '❌';
+                text.innerHTML = 'Denied<br><small style="font-size:14px;color:#888">Swipe back to ntfy</small>';
+                text.classList.add('result-denied');
+            }
         }
     </script>
 </body>
