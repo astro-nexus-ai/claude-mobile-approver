@@ -1,11 +1,18 @@
 # Claude Mobile Approver
 
+[English](#english) | [中文](#中文)
+
+---
+
+<a name="english"></a>
+## English
+
 <p align="center">
-  <strong>📱 在手机上审批 Claude Code 的权限请求</strong>
+  <strong>📱 Approve Claude Code Permission Requests on Your Phone</strong>
 </p>
 
 <p align="center">
-  实时推送通知 · 一键批准/拒绝 · 支持多用户 · 开箱即用
+  Real-time Push Notifications · One-tap Approve/Deny · Multi-user Support · Ready to Use
 </p>
 
 <p align="center">
@@ -13,6 +20,168 @@
   <img src="https://img.shields.io/badge/iOS-Supported-green" alt="iOS">
   <img src="https://img.shields.io/badge/Android-Supported-green" alt="Android">
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
+</p>
+
+---
+
+## ✨ Features
+
+- 🔔 **Real-time Push** - Get instant notifications when Claude Code needs permission
+- 👆 **One-tap Approval** - View details and approve/deny with a single tap
+- 🌐 **Work Anywhere** - Respond from home, office, or on the go
+- 👥 **Multi-user Support** - Team members can use independently without interference
+- 🔒 **Secure & Private** - Each user has their own account with isolated permissions
+- ⚡ **Fast Response** - Commands execute immediately after approval
+
+## 🏗️ Architecture
+
+```mermaid
+sequenceDiagram
+    participant Claude as Claude Code
+    participant Hook as Hook Script
+    participant Server as Approval Server
+    participant Ntfy as Ntfy Server
+    participant Mobile as 📱 Mobile
+
+    Claude->>Hook: Permission Request
+    Hook->>Server: Create approval request
+    Hook->>Ntfy: Send notification
+    Ntfy->>Mobile: 🔔 Push notification
+    Mobile->>Server: Open approval page
+    Mobile->>Server: Tap Approve/Deny
+    Hook->>Server: Poll status
+    Hook->>Claude: Return decision
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- A Linux server (for ntfy and approval service)
+- iOS or Android phone
+- [Claude Code](https://claude.ai/code) installed
+
+### 1. Server Deployment
+
+```bash
+# Create directories
+mkdir -p /opt/ntfy/config /opt/ntfy/cache /opt/claude-approver/approvals
+
+# Create ntfy config
+cat > /opt/ntfy/config/server.yml << 'EOF'
+base-url: http://YOUR_SERVER_IP:2586
+auth-file: /etc/ntfy/user.db
+auth-default-access: deny-all
+upstream-base-url: "https://ntfy.sh"
+EOF
+
+# Start ntfy
+docker run -d --name ntfy \
+  -p 2586:80 \
+  -v /opt/ntfy/config:/etc/ntfy \
+  -v /opt/ntfy/cache:/var/cache/ntfy \
+  binwiederhier/ntfy serve
+
+# Create admin user
+docker exec -it ntfy ntfy user add --role=admin claude
+```
+
+### 2. Deploy Approval Service
+
+```bash
+# Clone repository
+git clone https://github.com/zenyrahq/claude-mobile-approver.git
+cd claude-mobile-approver
+
+# Upload to server
+scp server/app.py root@YOUR_SERVER_IP:/opt/claude-approver/
+
+# Start service
+ssh root@YOUR_SERVER_IP "cd /opt/claude-approver && PORT=2587 nohup python3 app.py &"
+```
+
+### 3. Local Configuration
+
+```bash
+# Copy hook script
+mkdir -p ~/.claude/scripts
+cp client/scripts/ntfy-notify.sh ~/.claude/scripts/
+chmod +x ~/.claude/scripts/ntfy-notify.sh
+
+# Edit with your server details
+nano ~/.claude/scripts/ntfy-notify.sh
+```
+
+### 4. Configure Claude Code
+
+Edit `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/ntfy-notify.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 5. Mobile App Setup
+
+1. Install **ntfy** from App Store (iOS) or Play Store (Android)
+2. Add server: `http://YOUR_SERVER_IP:2586`
+3. Login with your credentials
+4. Subscribe to topic: `claude-approve`
+
+## 📖 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Server Setup Guide](docs/server-setup.md) | Detailed server configuration |
+| [User Guide](docs/user-guide.md) | Share with team members |
+
+## 👥 Team Usage
+
+Add new users with isolated topics:
+
+```bash
+docker exec -it ntfy ntfy user add --role=user <username>
+docker exec ntfy ntfy access <username> claude-approve-<username> rw
+```
+
+## 🔧 Tech Stack
+
+- [ntfy](https://ntfy.sh/) - Open-source push notification service
+- [Flask](https://flask.palletsprojects.com/) - Lightweight web framework
+- [Claude Code Hooks](https://docs.anthropic.com/claude-code/hooks) - Permission hooks
+
+## 🤝 Contributing
+
+Issues and Pull Requests are welcome!
+
+## 📄 License
+
+[MIT License](LICENSE)
+
+---
+
+<a name="中文"></a>
+## 中文
+
+<p align="center">
+  <strong>📱 在手机上审批 Claude Code 的权限请求</strong>
+</p>
+
+<p align="center">
+  实时推送通知 · 一键批准/拒绝 · 支持多用户 · 开箱即用
 </p>
 
 ---
@@ -26,29 +195,14 @@
 - 🔒 **安全可控** - 每个用户独立账号，权限隔离
 - ⚡ **快速响应** - 批准后命令立即执行，无需等待
 
-## 📸 截图
-
-<p align="center">
-  <table>
-    <tr>
-      <td align="center"><b>推送通知</b></td>
-      <td align="center"><b>审批页面</b></td>
-    </tr>
-    <tr>
-      <td><img src="docs/images/notification.png" width="250" alt="推送通知"></td>
-      <td><img src="docs/images/approval-page.png" width="250" alt="审批页面"></td>
-    </tr>
-  </table>
-</p>
-
 ## 🏗️ 架构
 
 ```mermaid
 sequenceDiagram
     participant Claude as Claude Code
-    participant Hook as Hook Script
-    participant Server as Approval Server
-    participant Ntfy as Ntfy Server
+    participant Hook as Hook 脚本
+    participant Server as 审批服务器
+    participant Ntfy as Ntfy 服务器
     participant Mobile as 📱 手机
 
     Claude->>Hook: 权限请求
@@ -69,11 +223,7 @@ sequenceDiagram
 - iOS 或 Android 手机
 - 已安装 [Claude Code](https://claude.ai/code)
 
-### 部署步骤
-
-#### 1. 服务器部署
-
-SSH 到你的服务器，执行以下命令：
+### 1. 服务器部署
 
 ```bash
 # 创建目录
@@ -98,11 +248,11 @@ docker run -d --name ntfy \
 docker exec -it ntfy ntfy user add --role=admin claude
 ```
 
-#### 2. 部署审批服务
+### 2. 部署审批服务
 
 ```bash
-# 下载代码
-git clone https://github.com/YOUR_USERNAME/claude-mobile-approver.git
+# 克隆仓库
+git clone https://github.com/zenyrahq/claude-mobile-approver.git
 cd claude-mobile-approver
 
 # 上传到服务器
@@ -112,10 +262,11 @@ scp server/app.py root@YOUR_SERVER_IP:/opt/claude-approver/
 ssh root@YOUR_SERVER_IP "cd /opt/claude-approver && PORT=2587 nohup python3 app.py &"
 ```
 
-#### 3. 本地配置
+### 3. 本地配置
 
 ```bash
 # 复制 hook 脚本
+mkdir -p ~/.claude/scripts
 cp client/scripts/ntfy-notify.sh ~/.claude/scripts/
 chmod +x ~/.claude/scripts/ntfy-notify.sh
 
@@ -123,7 +274,7 @@ chmod +x ~/.claude/scripts/ntfy-notify.sh
 nano ~/.claude/scripts/ntfy-notify.sh
 ```
 
-#### 4. 配置 Claude Code
+### 4. 配置 Claude Code
 
 编辑 `~/.claude/settings.json`：
 
@@ -145,7 +296,7 @@ nano ~/.claude/scripts/ntfy-notify.sh
 }
 ```
 
-#### 5. 手机配置
+### 5. 手机配置
 
 1. 在 App Store / Play 商店安装 **ntfy** 应用
 2. 添加服务器：`http://YOUR_SERVER_IP:2586`
@@ -164,9 +315,8 @@ nano ~/.claude/scripts/ntfy-notify.sh
 支持多用户独立使用：
 
 ```bash
-# 添加新用户
-docker exec -it ntfy ntfy user add --role=user wang
-docker exec ntfy ntfy access wang claude-approve-wang rw
+docker exec -it ntfy ntfy user add --role=user <用户名>
+docker exec ntfy ntfy access <用户名> claude-approve-<用户名> rw
 ```
 
 每个用户使用独立的 topic，互不干扰。
@@ -185,12 +335,8 @@ docker exec ntfy ntfy access wang claude-approve-wang rw
 
 [MIT License](LICENSE)
 
-## ⭐ Star History
-
-如果这个项目对你有帮助，请给一个 Star ⭐
+---
 
 <p align="center">
-  <a href="https://github.com/YOUR_USERNAME/claude-mobile-approver">
-    <img src="https://img.shields.io/github/stars/YOUR_USERNAME/claude-mobile-approver?style=social" alt="GitHub Stars">
-  </a>
+  如果这个项目对你有帮助，请给一个 ⭐ Star
 </p>
