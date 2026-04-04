@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <strong>📱 Approve Claude Code Permission Requests on Your Phone</strong>
+  <strong>📱 Approve Claude Code / Kiro CLI Permission Requests on Your Phone</strong>
 </p>
 
 <p align="center">
@@ -15,6 +15,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Claude%20Code-Compatible-blue" alt="Claude Code">
+  <img src="https://img.shields.io/badge/Kiro%20CLI-Compatible-purple" alt="Kiro CLI">
   <img src="https://img.shields.io/badge/iOS-Supported-green" alt="iOS">
   <img src="https://img.shields.io/badge/Android-Supported-green" alt="Android">
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
@@ -24,7 +25,7 @@
 
 ## ✨ Features
 
-- 🔔 **Real-time Push** - Get instant notifications when Claude Code needs permission
+- 🔔 **Real-time Push** - Get instant notifications when Claude Code / Kiro CLI needs permission
 - 👆 **One-tap Approval** - View details and approve/deny with a single tap
 - 🌐 **Work Anywhere** - Respond from home, office, or on the go
 - 👥 **Multi-user Support** - Team members can use independently without interference
@@ -43,20 +44,21 @@
 
 ```mermaid
 sequenceDiagram
-    participant Claude as Claude Code
+    participant AI as Claude Code / Kiro CLI
     participant Hook as Hook Script
     participant Server as Approval Server
     participant Ntfy as Ntfy Server
     participant Mobile as 📱 Mobile
 
-    Claude->>Hook: Permission Request
+    AI->>Hook: Permission Request
+    Hook->>Hook: Auto-detect caller
     Hook->>Server: Create approval request
-    Hook->>Ntfy: Send notification
+    Hook->>Ntfy: Send to topic (claude/kiro)
     Ntfy->>Mobile: 🔔 Push notification
     Mobile->>Server: Open approval page
     Mobile->>Server: Tap Approve/Deny
     Hook->>Server: Poll status
-    Hook->>Claude: Return decision
+    Hook->>AI: Return decision
 ```
 
 ## 🚀 Quick Start
@@ -65,7 +67,7 @@ sequenceDiagram
 
 - A Linux server (for ntfy and approval service)
 - iOS or Android phone
-- [Claude Code](https://claude.ai/code) installed
+- [Claude Code](https://claude.ai/code) and/or [Kiro CLI](https://kiro.dev) installed
 
 ### 1. Server Deployment
 
@@ -90,6 +92,17 @@ docker run -d --name ntfy \
 
 # Create admin user
 docker exec -it ntfy ntfy user add --role=admin claude
+
+# Generate Web Push keys (required for iOS push)
+docker exec ntfy ntfy webpush keys
+# Add the generated keys to /opt/ntfy/config/server.yml:
+# web-push-public-key: YOUR_PUBLIC_KEY
+# web-push-private-key: YOUR_PRIVATE_KEY
+# web-push-file: /var/cache/ntfy/webpush.db
+# web-push-email-address: your-email@example.com
+
+# Restart ntfy to apply Web Push config
+docker restart ntfy
 ```
 
 ### 2. Deploy Approval Service
@@ -109,16 +122,17 @@ ssh root@YOUR_SERVER_IP "cd /opt/claude-approver && PORT=2587 nohup python3 app.
 ### 3. Local Configuration
 
 ```bash
-# Copy hook script
-mkdir -p ~/.claude/scripts
+# Copy hook script and config
+mkdir -p ~/.claude/scripts ~/.claude/config
 cp client/scripts/ntfy-notify.sh ~/.claude/scripts/
+cp client/config/settings.example.json ~/.claude/config/settings.json
 chmod +x ~/.claude/scripts/ntfy-notify.sh
 
-# Edit with your server details
-nano ~/.claude/scripts/ntfy-notify.sh
+# Edit config with your server details
+nano ~/.claude/config/settings.json
 ```
 
-### 4. Configure Claude Code
+### 4a. Configure Claude Code
 
 Edit `~/.claude/settings.json`:
 
@@ -140,12 +154,29 @@ Edit `~/.claude/settings.json`:
 }
 ```
 
+### 4b. Configure Kiro CLI
+
+Copy the agent config:
+
+```bash
+mkdir -p ~/.kiro/agents
+cp client/config/kiro-agent.example.json ~/.kiro/agents/mobile-approver.json
+```
+
+Then in Kiro CLI, switch to the agent:
+
+```
+/agent swap mobile-approver
+```
+
 ### 5. Mobile App Setup
 
 1. Install **ntfy** from App Store (iOS) or Play Store (Android)
 2. Add server: `http://YOUR_SERVER_IP:2586`
 3. Login with your credentials
-4. Subscribe to topic: `claude-approve`
+4. Subscribe to topics:
+   - `claude-approve` (for Claude Code)
+   - `kiro-approve` (for Kiro CLI)
 
 ## 📖 Documentation
 
@@ -169,6 +200,7 @@ docker exec ntfy ntfy access <username> claude-approve-<username> rw
 - [ntfy](https://ntfy.sh/) - Open-source push notification service
 - [Flask](https://flask.palletsprojects.com/) - Lightweight web framework
 - [Claude Code Hooks](https://docs.anthropic.com/claude-code/hooks) - Permission hooks
+- [Kiro CLI Hooks](https://kiro.dev/docs/cli/hooks/) - Kiro CLI hooks
 
 ## 🤝 Contributing
 

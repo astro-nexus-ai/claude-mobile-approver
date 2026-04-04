@@ -221,7 +221,7 @@ APPROVAL_PAGE = '''<!DOCTYPE html>
     <div class="container" id="pending">
         <div class="header">
             <div class="icon">🤖</div>
-            <div class="title">Claude Code</div>
+            <div class="title" id="headerTitle">Claude Code</div>
             <div class="subtitle">Permission Request</div>
         </div>
         <div class="content">
@@ -284,6 +284,11 @@ APPROVAL_PAGE = '''<!DOCTYPE html>
                 document.getElementById('toolIcon').textContent = toolIcons[tool] || '🔧';
                 document.getElementById('toolName').textContent = tool;
                 document.getElementById('toolBadge').textContent = tool.toUpperCase();
+
+                // Detect source from data
+                if (data.source === 'kiro') {
+                    document.getElementById('headerTitle').textContent = 'Kiro CLI';
+                }
 
                 var cmdText = '';
                 if (tool === 'Bash') {
@@ -445,7 +450,8 @@ def create_request(session_id):
         'command': request.json.get('command', ''),
         'input': request.json.get('input', {}),
         'description': request.json.get('description', ''),
-        'suggestions': request.json.get('suggestions', [])
+        'suggestions': request.json.get('suggestions', []),
+        'source': request.json.get('source', 'claude')
     }
 
     filepath = f'{APPROVAL_DIR}/{session_id}.json'

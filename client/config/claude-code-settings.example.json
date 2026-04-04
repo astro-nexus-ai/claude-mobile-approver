@@ -1,0 +1,15 @@
+{
+    "hooks": {
+        "PermissionRequest": [
+            {
+                "matcher": ".*",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "~/.claude/scripts/ntfy-notify-universal.sh"
+                    }
+                ]
+            }
+        ]
+    }
+}

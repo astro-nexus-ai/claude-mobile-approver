@@ -3,7 +3,7 @@
 [English](README_EN.md) | [中文](README_CN.md) | [日本語](README_JP.md)
 
 <p align="center">
-  <strong>📱 スマホでClaude Codeの権限リクエストを承認</strong>
+  <strong>📱 スマホでClaude Code / Kiro CLIの権限リクエストを承認</strong>
 </p>
 
 <p align="center">
@@ -12,6 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Claude%20Code-Compatible-blue" alt="Claude Code">
+  <img src="https://img.shields.io/badge/Kiro%20CLI-Compatible-purple" alt="Kiro CLI">
   <img src="https://img.shields.io/badge/iOS-Supported-green" alt="iOS">
   <img src="https://img.shields.io/badge/Android-Supported-green" alt="Android">
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
@@ -21,7 +22,7 @@
 
 ## ✨ 機能
 
-- 🔔 **リアルタイムプッシュ** - Claude Codeが権限を必要とする際、すぐに通知を受信
+- 🔔 **リアルタイムプッシュ** - Claude Code / Kiro CLIが権限を必要とする際、すぐに通知を受信
 - 👆 **ワンタップ承認** - 詳細を確認し、ワンタップで承認/拒否
 - 🌐 **どこでも利用可能** - オフィス、自宅、移動中どこからでも対応
 - 👥 **マルチユーザー対応** - チームメンバーが独立して使用可能、干渉なし
@@ -32,20 +33,21 @@
 
 ```mermaid
 sequenceDiagram
-    participant Claude as Claude Code
+    participant AI as Claude Code / Kiro CLI
     participant Hook as フックスクリプト
     participant Server as 承認サーバー
     participant Ntfy as Ntfyサーバー
     participant Mobile as 📱 スマホ
 
-    Claude->>Hook: 権限リクエスト
+    AI->>Hook: 権限リクエスト
+    Hook->>Hook: 呼び出し元を自動検出
     Hook->>Server: 承認リクエスト作成
-    Hook->>Ntfy: 通知送信
+    Hook->>Ntfy: 対応トピックに送信
     Ntfy->>Mobile: 🔔 プッシュ通知
     Mobile->>Server: 承認ページを開く
     Mobile->>Server: 承認/拒否をタップ
     Hook->>Server: ステータスをポーリング
-    Hook->>Claude: 判定を返す
+    Hook->>AI: 判定を返す
 ```
 
 ## 🚀 クイックスタート
@@ -54,7 +56,7 @@ sequenceDiagram
 
 - Linuxサーバー（ntfyと承認サービス用）
 - iOSまたはAndroidスマートフォン
-- [Claude Code](https://claude.ai/code)がインストール済み
+- [Claude Code](https://claude.ai/code)および/または[Kiro CLI](https://kiro.dev)がインストール済み
 
 ### 1. サーバーデプロイ
 
@@ -79,6 +81,17 @@ docker run -d --name ntfy \
 
 # 管理者ユーザー作成
 docker exec -it ntfy ntfy user add --role=admin claude
+
+# Web Pushキー生成（iOSプッシュ通知に必須）
+docker exec ntfy ntfy webpush keys
+# 生成されたキーを /opt/ntfy/config/server.yml に追加：
+# web-push-public-key: YOUR_PUBLIC_KEY
+# web-push-private-key: YOUR_PRIVATE_KEY
+# web-push-file: /var/cache/ntfy/webpush.db
+# web-push-email-address: your-email@example.com
+
+# ntfy再起動してWeb Push設定を適用
+docker restart ntfy
 ```
 
 ### 2. 承認サービスのデプロイ
@@ -98,16 +111,17 @@ ssh root@YOUR_SERVER_IP "cd /opt/claude-approver && PORT=2587 nohup python3 app.
 ### 3. ローカル設定
 
 ```bash
-# フックスクリプトをコピー
-mkdir -p ~/.claude/scripts
+# フックスクリプトと設定をコピー
+mkdir -p ~/.claude/scripts ~/.claude/config
 cp client/scripts/ntfy-notify.sh ~/.claude/scripts/
+cp client/config/settings.example.json ~/.claude/config/settings.json
 chmod +x ~/.claude/scripts/ntfy-notify.sh
 
 # サーバー情報を編集
-nano ~/.claude/scripts/ntfy-notify.sh
+nano ~/.claude/config/settings.json
 ```
 
-### 4. Claude Codeの設定
+### 4a. Claude Codeの設定
 
 `~/.claude/settings.json`を編集：
 
@@ -129,12 +143,29 @@ nano ~/.claude/scripts/ntfy-notify.sh
 }
 ```
 
+### 4b. Kiro CLIの設定
+
+エージェント設定をコピー：
+
+```bash
+mkdir -p ~/.kiro/agents
+cp client/config/kiro-agent.example.json ~/.kiro/agents/mobile-approver.json
+```
+
+Kiro CLIでエージェントを切り替え：
+
+```
+/agent swap mobile-approver
+```
+
 ### 5. モバイルアプリの設定
 
 1. App Store / Play Storeで**ntfy**をインストール
 2. サーバーを追加：`http://YOUR_SERVER_IP:2586`
 3. 認証情報でログイン
-4. トピックを購読：`claude-approve`
+4. トピックを購読：
+   - `claude-approve`（Claude Code用）
+   - `kiro-approve`（Kiro CLI用）
 
 ## 📖 ドキュメント
 
@@ -159,6 +190,7 @@ docker exec ntfy ntfy access <ユーザー名> claude-approve-<ユーザー名> 
 - [ntfy](https://ntfy.sh/) - オープンソースプッシュ通知サービス
 - [Flask](https://flask.palletsprojects.com/) - 軽量Webフレームワーク
 - [Claude Code Hooks](https://docs.anthropic.com/claude-code/hooks) - 権限フック
+- [Kiro CLI Hooks](https://kiro.dev/docs/cli/hooks/) - Kiro CLIフック
 
 ## 🤝 コントリビュート
 

@@ -42,6 +42,39 @@ upstream-base-url: "https://ntfy.sh"
 EOF
 ```
 
+### 生成 Web Push 密钥（iOS 推送必需）
+
+iOS 设备需要 Web Push 配置才能接收即时推送通知：
+
+```bash
+# 生成 Web Push 密钥对
+docker exec ntfy ntfy webpush keys
+```
+
+输出示例：
+```
+web-push-public-key: BKy5v-xxx...
+web-push-private-key: QF1wNZxxx...
+```
+
+将生成的密钥添加到 `/opt/ntfy/config/server.yml`：
+
+```bash
+cat >> /opt/ntfy/config/server.yml << 'EOF'
+
+# Web Push 配置（iOS 推送必需）
+web-push-public-key: YOUR_PUBLIC_KEY
+web-push-private-key: YOUR_PRIVATE_KEY
+web-push-file: /var/cache/ntfy/webpush.db
+web-push-email-address: your-email@example.com
+EOF
+```
+
+**⚠️ 重要**：添加 Web Push 配置后需要重启 ntfy：
+```bash
+cd /opt/ntfy && docker compose restart
+```
+
 ### 创建 docker-compose.yml
 
 ```bash

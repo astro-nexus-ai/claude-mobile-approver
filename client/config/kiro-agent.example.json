@@ -1,0 +1,24 @@
+{
+    "name": "mobile-approver",
+    "description": "Default agent with mobile approval for tool permissions",
+    "tools": ["*"],
+    "hooks": {
+        "preToolUse": [
+            {
+                "matcher": "execute_bash",
+                "command": "~/.claude/scripts/ntfy-notify.sh",
+                "timeout_ms": 310000
+            },
+            {
+                "matcher": "fs_write",
+                "command": "~/.claude/scripts/ntfy-notify.sh",
+                "timeout_ms": 310000
+            },
+            {
+                "matcher": "use_aws",
+                "command": "~/.claude/scripts/ntfy-notify.sh",
+                "timeout_ms": 310000
+            }
+        ]
+    }
+}
